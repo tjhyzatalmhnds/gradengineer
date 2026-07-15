@@ -278,7 +278,6 @@
             margin-bottom: 15px;
         }
 
-        /* تنسيقات صندوق الإضافات الذكي */
         .additions-box {
             background-color: #11223b;
             border: 1px solid var(--card-border);
@@ -319,7 +318,7 @@
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner" id="modalSpinner"></div>
-        <p id="loadingText">جاري تحميل وتأمين المعاملة للدفعة الفخمة...</p>
+        <p id="loadingText">جاري تحميل وتأمين المعاملة للدفعة...</p>
     </div>
 
     <div class="main-wrapper">
@@ -374,7 +373,7 @@
                         <input type="text" id="dept-name" class="form-control" placeholder="مثال: هندسة مدني / صباحي" required>
                     </div>
                     <div class="form-group">
-                        <label for="student-count">عدد الطلاب *</label>
+                        <label for="student-count">عدد الطلاب المتوقع *</label>
                         <input type="number" id="student-count" class="form-control" placeholder="مثال: 45" required>
                     </div>
                 </div>
@@ -430,11 +429,16 @@
                     </div>
 
                     <div class="form-group">
+                        <label for="student-phone">رقم الهاتف الفعال للتواصل والواتساب *</label>
+                        <input type="tel" id="student-phone" class="form-control" placeholder="07XXXXXXXXX" required>
+                    </div>
+
+                    <div class="form-group">
                         <label for="sash-text">الاسم المطلوب تطريزه على الوشاح *</label>
                         <input type="text" id="sash-text" class="form-control" placeholder="مثال: المهندس علي" required>
                     </div>
 
-                    <div class="section-title">تفاصيل وصور التطريز المخصصة (ملكي فخم)</div>
+                    <div class="section-title">تفاصيل وصور التطريز المخصصة</div>
 
                     <div class="form-group">
                         <label for="sash-back-text">الكتابة على ظهر الوشاح</label>
@@ -499,6 +503,35 @@
                         </div>
                     </div>
 
+                    <div class="section-title">قياسات التفصيل بدقة (بالسنتيمتر سم)</div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="length-gown">طول الروب *</label>
+                            <input type="number" id="length-gown" class="form-control" placeholder="مثال: 140" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="length-sleeve">طول الردن *</label>
+                            <input type="number" id="length-sleeve" class="form-control" placeholder="مثال: 60" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="measure-shoulder">قياس الكتف *</label>
+                            <input type="number" id="measure-shoulder" class="form-control" placeholder="مثال: 44" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="measure-chest">قياس محيط الصدر *</label>
+                            <input type="number" id="measure-chest" class="form-control" placeholder="مثال: 100" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="measure-head">قياس الرأس *</label>
+                        <input type="number" id="measure-head" class="form-control" placeholder="مثال: 57" required>
+                    </div>
+
                     <button type="submit" class="btn-submit">تأكيد الانضمام وإرسال التطريزات</button>
                 </form>
             </div>
@@ -514,7 +547,6 @@
         let validatedBatchData = null; 
         let uniLogoBase64 = null;
 
-        // وظائف إدارة خيارات الإضافات
         function toggleLengthInput() {
             const checkbox = document.getElementById('add-extra-length');
             const container = document.getElementById('length-amount-container');
@@ -640,143 +672,4 @@
 
                 const result = await response.json();
 
-                if (response.ok && result.success) {
-                    document.getElementById('modalSpinner').style.display = 'none';
-                    overlay.style.backgroundColor = "rgba(6, 12, 24, 0.98)";
-                    document.getElementById('loadingText').innerHTML = `
-                        <span style="font-size: 3rem;">👑</span><br>
-                        <h2 style="color: var(--gold-primary); margin: 15px 0;">تم تأسيس الدفعة بنجاح!</h2>
-                        <p style="color: var(--text-white); font-size: 1rem; margin-bottom: 20px;">
-                            انسخ هذا الكود وشاركه مع زملائك في الدفعة ليقوموا بالانضمام وملء تفاصيلهم مباشرة:
-                        </p>
-                        <div class="batch-code-box">
-                            <div style="font-size: 0.85rem; color: var(--gold-primary);">كود الدفعة الخاص بكم</div>
-                            <div class="batch-code-text">${batchCode}</div>
-                        </div>
-                        <button class="btn-submit" style="width: 200px; margin-top: 15px;" onclick="window.location.href='index.html'">العودة للرئيسية</button>
-                    `;
-                } else {
-                    throw new Error(result.error || "حدثت مشكلة أثناء محاولة إنشاء الدفعة");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("فشل إنشاء الدفعة، يرجى المحاولة لاحقاً.");
-                overlay.style.display = 'none';
-            }
-        }
-
-        async function handleVerifyBatch(event) {
-            event.preventDefault();
-            const overlay = document.getElementById('loadingOverlay');
-            const searchCode = document.getElementById('search-code').value;
-
-            overlay.style.display = 'flex';
-            document.getElementById('loadingText').innerText = "جاري الاستعلام عن بيانات الدفعة والتحقق من الكود...";
-
-            try {
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ actionType: "VERIFY_BATCH", batchCode: searchCode })
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    validatedBatchData = result.batchData;
-                    overlay.style.display = 'none';
-                    
-                    document.getElementById('search-code').disabled = true;
-                    document.getElementById('verifyBtn').style.display = 'none';
-                    
-                    const measurementSection = document.getElementById('student-measurement-section');
-                    measurementSection.style.display = 'block';
-
-                    const infoDiv = document.createElement('div');
-                    infoDiv.className = 'summary-banner';
-                    infoDiv.style.borderColor = 'var(--gold-primary)';
-                    infoDiv.innerHTML = `
-                        ✅ تم العثور على الدفعة بنجاح!<br>
-                        🏫 <b>الجامعة:</b> ${validatedBatchData.uniName} | 🎓 <b>الكلية:</b> ${validatedBatchData.collName}<br>
-                        📂 <b>القسم:</b> ${validatedBatchData.deptName}<br>
-                        ✨ <b>الموديل المعتمد:</b> ${validatedBatchData.batchModel} | 🧵 <b>القماش الموحد:</b> ${validatedBatchData.batchFabric}
-                    `;
-                    measurementSection.insertBefore(infoDiv, measurementSection.firstChild);
-
-                    // تفعيل الفلترة على الإضافات مباشرة اعتماداً على موديل الدفعة
-                    checkAdditionsVisibility(validatedBatchData.batchModel);
-
-                    document.getElementById('page-subtitle').innerText = "تأكد من مطابقة التفاصيل أعلاه ثم املأ استمارة تطريزك الملكي";
-                } else {
-                    throw new Error(result.error || "الكود غير صحيح أو لم يتم العثور على الدفعة!");
-                }
-            } catch (error) {
-                alert(error.message);
-                overlay.style.display = 'none';
-            }
-        }
-
-        async function handleJoinBatchSubmit(event) {
-            event.preventDefault();
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.style.display = 'flex';
-            document.getElementById('loadingText').innerText = "جاري تشفير وضغط صور التطريزات الفخمة...";
-
-            const sashBackImg = await fileToBase64('sash-back-img');
-            const capTopImg = await fileToBase64('cap-top-img');
-            const capSideImg = await fileToBase64('cap-side-img');
-
-            const studentPayload = {
-                actionType: "JOIN_BATCH",
-                batchCode: validatedBatchData.batchCode,
-                uniName: validatedBatchData.uniName,
-                collName: validatedBatchData.collName,
-                deptName: validatedBatchData.deptName,
-                batchModel: validatedBatchData.batchModel,
-                batchFabric: validatedBatchData.batchFabric,
-                studentName: document.getElementById('student-name').value,
-                sashText: document.getElementById('sash-text').value,
-                sashBackText: document.getElementById('sash-back-text').value || 'لم يكتب شيء',
-                capTopText: document.getElementById('cap-top-text').value || 'لم يكتب شيء',
-                capSideText: document.getElementById('cap-side-text').value || 'لم يكتب شيء',
-                additions: getSelectedAdditions(), // جمع الإضافات الفخمة
-                images: {
-                    sashBackImg,
-                    capTopImg,
-                    capSideImg
-                }
-            };
-
-            try {
-                document.getElementById('loadingText').innerText = "جاري رفع بياناتك الآمنة لجدول الدفعة...";
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(studentPayload)
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    document.getElementById('modalSpinner').style.display = 'none';
-                    overlay.style.backgroundColor = "rgba(6, 12, 24, 0.98)";
-                    document.getElementById('loadingText').innerHTML = `
-                        <span style="font-size: 3rem;">🎉</span><br>
-                        <h2 style="color: var(--success); margin: 15px 0;">تم تسجيل بياناتك بنجاح!</h2>
-                        <p style="color: var(--text-white); font-size: 1rem; margin-bottom: 20px;">
-                            تم حفظ تطريزاتك وإضافاتك الفخمة تحت مظلة كود الدفعة بنجاح مذهل. بالتوفيق في تخرجكم!
-                        </p>
-                        <button class="btn-submit" style="width: 200px; margin-top: 15px;" onclick="window.location.href='index.html'">العودة للرئيسية</button>
-                    `;
-                } else {
-                    throw new Error(result.error || "حدث خطأ أثناء إرسال استمارة الانضمام");
-                }
-            } catch (error) {
-                console.error(error);
-                alert("فشل الانضمام للدفعة، أعد المحاولة مجدداً.");
-                overlay.style.display = 'none';
-            }
-        }
-    </script>
-</body>
-</html>
+                if (response.ok && result.success
