@@ -1,31 +1,36 @@
 const fetch = require('node-fetch');
 
-// ذاكرة مؤقتة بسيطة لحفظ بيانات الدفعات النشطة للتحقق الفوري منها
+// ذاكرة مؤقتة بسيطة لحفظ بيانات الدفعات النشطة
 const activeBatches = {};
 
 exports.handler = async (event, context) => {
+  // إعدادات الـ CORS للسماح باستقبال الطلبات من المتصفح
   const headers = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "POST, OPTIONS"
   };
 
+  // التعامل مع طلبات الفحص المسبق (Preflight)
   if (event.httpMethod === "OPTIONS") {
     return { statusCode: 200, headers, body: "" };
   }
 
+  // منع أي طلب غير POST
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, headers, body: "Method Not Allowed" };
   }
 
   try {
     const data = JSON.parse(event.body);
+    
+    // استدعاء المتغيرات السرية من إعدادات Netlify
     const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
     const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;             // قناة الفردي
-    const TELEGRAM_BATCH_CHAT_ID = process.env.TELEGRAM_BATCH_CHAT_ID; // آيدي جروب الدفعات
+    const TELEGRAM_BATCH_CHAT_ID = process.env.TELEGRAM_BATCH_CHAT_ID; // جروب الدفعات
     const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL;
 
-    // دالة إرسال الرسالة النصية للتليجرام
+    // 1️⃣ دالة إرسال الرسالة النصية للتليجرام
     const sendTelegramMessage = async (text, chatId) => {
       if (!TELEGRAM_BOT_TOKEN || !chatId) return;
       await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -35,7 +40,7 @@ exports.handler = async (event, context) => {
       });
     };
 
-    // دالة إرسال الصور للتليجرام
+    // 2️⃣ دالة إرسال الصور للتليجرام (معالجة Base64)
     const sendPhoto = async (imgObj, caption, chatId) => {
       if (!imgObj || !imgObj.base64 || !TELEGRAM_BOT_TOKEN || !chatId) return;
       try {
@@ -62,10 +67,9 @@ exports.handler = async (event, context) => {
     };
 
     // ==========================================
-    // 1️⃣ معالجة إنشاء دفعة جديدة (CREATE_BATCH)
+    // 🟡 معالجة إنشاء دفعة جديدة (CREATE_BATCH)
     // ==========================================
     if (data.actionType === "CREATE_BATCH") {
-      // حفظ بيانات الدفعة في الذاكرة المؤقتة للتحقق منها لاحقاً
       activeBatches[data.batchCode] = {
         batchCode: data.batchCode,
         uniName: data.uniName,
@@ -90,10 +94,9 @@ exports.handler = async (event, context) => {
     }
 
     // ==========================================
-    // 2️⃣ التحقق من كود الدفعة (VERIFY_BATCH)
+    // 🟡 التحقق من كود الدفعة (VERIFY_BATCH)
     // ==========================================
     else if (data.actionType === "VERIFY_BATCH") {
-      // التحقق من الذاكرة أو السماح بالمرور في حال كان الكود صحيح التنسيق
       const batchData = activeBatches[data.batchCode] || {
         batchCode: data.batchCode,
         uniName: "جامعة مسجلة",
@@ -111,7 +114,7 @@ exports.handler = async (event, context) => {
     }
 
     // ==========================================
-    // 3️⃣ معالجة انضمام طالب لدفعة (JOIN_BATCH)
+    // 🟡 معالجة انضمام طالب لدفعة (JOIN_BATCH)
     // ==========================================
     else if (data.actionType === "JOIN_BATCH") {
       const joinMsg = `🤝 **انضمام طالب لدفعة (${data.batchCode})**\n\n` +
@@ -133,7 +136,7 @@ exports.handler = async (event, context) => {
     }
 
     // ==========================================
-    // 4️⃣ معالجة الطلب الفردي (SINGLE_ORDER)
+    // 🟡 معالجة الطلب الفردي (SINGLE_ORDER)
     // ==========================================
     else {
       const singleMsg = `📋 **طلب فردي جديد - تجهيزات المهندس**\n\n` +
@@ -157,7 +160,9 @@ exports.handler = async (event, context) => {
       }
     }
 
-    // إرسال كافة البيانات تلقائياً إلى جدول Google Sheets في حال وجود الرابط
+    // ==========================================
+    // 🟢 إرسال كافة البيانات تلقائياً إلى جدول Google Sheets 
+    // ==========================================
     if (GOOGLE_SCRIPT_URL) {
       try {
         await fetch(GOOGLE_SCRIPT_URL, {
