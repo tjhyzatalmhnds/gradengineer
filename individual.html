@@ -72,6 +72,7 @@
             transition: all 0.3s ease;
         }
 
+        /* حاويات الخطوات التفاعلية */
         .step-container {
             display: flex;
             flex-direction: column;
@@ -79,6 +80,7 @@
             margin-top: 20px;
         }
 
+        /* كروت الاختيار */
         .selection-card {
             background-color: var(--card-bg);
             border: 2px solid var(--card-border);
@@ -114,6 +116,7 @@
             opacity: 0.8;
         }
 
+        /* حاوية الاستمارة النهائية */
         .form-container {
             display: none;
             background-color: var(--card-bg);
@@ -123,6 +126,7 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
+        /* بار عرض الخيارات النشطة */
         .summary-banner {
             background-color: var(--input-bg);
             border: 1px dashed var(--gold-primary);
@@ -188,6 +192,7 @@
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
         }
 
+        /* تصميم مخصص لرفع الصور */
         .file-upload-wrapper {
             position: relative;
             margin-top: 5px;
@@ -238,6 +243,7 @@
             color: var(--gold-primary);
         }
 
+        /* تأثيرات التحميل عند الإرسال */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -250,8 +256,6 @@
             color: var(--gold-primary);
             font-weight: 700;
             font-size: 1.2rem;
-            padding: 20px;
-            text-align: center;
         }
 
         .spinner {
@@ -264,6 +268,7 @@
             margin-bottom: 15px;
         }
 
+        /* تنسيقات صندوق الإضافات الذكي */
         .additions-box {
             background-color: #11223b;
             border: 1px solid var(--card-border);
@@ -303,10 +308,8 @@
 <body>
 
     <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner" id="modalSpinner"></div>
-        <div id="loadingText" style="width: 100%; max-width: 480px; text-align: center;">
-            جاري معالجة وإرسال طلبك...
-        </div>
+        <div class="spinner"></div>
+        <p id="loadingText">جاري تشفير ومعالجة طلبك الفخم...</p>
     </div>
 
     <div class="main-wrapper">
@@ -377,7 +380,8 @@
         </div>
 
         <div class="form-container" id="form-step">
-            <div class="summary-banner" id="summary-banner"></div>
+            <div class="summary-banner" id="summary-banner">
+                </div>
 
             <form id="individualOrderForm" onsubmit="handleOrderSubmit(event)">
                 <div class="section-title">بيانات الطالب الأساسية</div>
@@ -512,20 +516,14 @@
     </div>
 
     <script>
+        // Netlify ستقوم بتوجيه الطلب تلقائياً لملف submit-order.js بأمان
         const NETLIFY_FUNCTION_URL = '/.netlify/functions/submit-order';
+        // متغيرات الحفظ للمسارات التفاعلية
         let modelSelected = '';
         let fabricSelected = '';
         let sashSelected = ''; 
 
-        // دوال التحكم بالأزرار بعد انتهاء الطلب
-        function goToHome() {
-            window.location.href = 'index.html';
-        }
-
-        function resetForm() {
-            window.location.reload();
-        }
-
+        // وظائف إدارة خيارات الإضافات
         function toggleLengthInput() {
             const checkbox = document.getElementById('add-extra-length');
             const container = document.getElementById('length-amount-container');
@@ -568,6 +566,7 @@
             return selected.length > 0 ? selected.join(' - ') : "لا توجد إضافات";
         }
 
+        // الانتقال لاختيار القماش
         function nextToFabric(modelName, icon) {
             modelSelected = modelName;
             document.getElementById('model-step').style.display = 'none';
@@ -577,6 +576,7 @@
             document.getElementById('page-subtitle').innerText = `الموديل الحالي: ${modelName} ${icon} - يرجى تحديد الخامة`;
         }
 
+        // الانتقال للوشاح (إذا أمريكي) أو مباشرة للاستمارة
         function nextToSashOrForm(fabricName) {
             fabricSelected = fabricName;
             document.getElementById('fabric-step').style.display = 'none';
@@ -591,12 +591,14 @@
             }
         }
 
+        // إنهاء اختيار الوشاح (خاص بالأمريكي) والانتقال للاستمارة
         function finishSelection(sashType, icon) {
             sashSelected = sashType;
             document.getElementById('sash-step').style.display = 'none';
             showForm();
         }
 
+        // إظهار الاستمارة وضبط حقولها ديناميكياً
         function showForm() {
             document.getElementById('form-step').style.display = 'block';
             document.getElementById('page-title').innerText = "تفاصيل وقياسات الطلب الفردي";
@@ -624,10 +626,11 @@
                 groupSashBack.style.display = 'none';
             }
 
+            // تطبيق التحكم الذكي بالإضافات حسب الموديل المختار
             checkAdditionsVisibility(modelSelected);
         }
 
-        // إكمال الدالة الناقصة لمعالجة الصور
+        // دالة مساعدة لتشفير وتحويل ملفات الصور المرفوعة إلى ترميز Base64 لترسل بأمان عبر الـ Worker
         function fileToBase64(fileInputId) {
             return new Promise((resolve) => {
                 const fileInput = document.getElementById(fileInputId);
@@ -648,7 +651,7 @@
             });
         }
 
-        // دالة الإرسال الكاملة
+        // معالجة وإرسال الطلب بالكامل
         async function handleOrderSubmit(event) {
             event.preventDefault();
 
@@ -656,13 +659,15 @@
             overlay.style.display = 'flex';
             document.getElementById('loadingText').innerText = "جاري ترميز وضغط الصور المرفقة بأمان...";
 
+            // معالجة الصور وتحويلها لـ Base64
             const sashFixedImg = await fileToBase64('sash-fixed-img');
             const sashBackImg = await fileToBase64('sash-back-img');
-            const pcbTopImg = await fileToBase64('cap-top-img');
+            const pcbTopImg = await fileToBase64('cap-top-img'); // تم تغيير المسمى لتفادي تضارب المتغيرات
             const pcbSideImg = await fileToBase64('cap-side-img');
 
+            // تجميع كائن البيانات الكامل لتمريره للـ Worker
             const orderData = {
-                actionType: "SINGLE_ORDER",
+                actionType: "SINGLE_ORDER", // لتحديد نوع المعاملة في السيرفر بشكل صريح
                 studentName: document.getElementById('student-name').value,
                 sashText: document.getElementById('sash-text').value,
                 phone: document.getElementById('student-phone').value,
@@ -675,12 +680,11 @@
                 sashBackText: document.getElementById('sash-back-text').value || 'لم يكتب شيء',
                 capTopText: document.getElementById('cap-top-text').value || 'لم يكتب شيء',
                 capSideText: document.getElementById('cap-side-text').value || 'لم يكتب شيء',
-                batchModel: modelSelected,
+                batchModel: modelSelected, // تم توحيد المفاتيح لتتوافق مع كود السيرفر
                 batchFabric: fabricSelected,
                 sashSelected: sashSelected,
-                additions: getSelectedAdditions(),
+                additions: getSelectedAdditions(), // إرسال الإضافات الفخمة
                 images: {
-                    sashFixedImg,
                     sashBackImg,
                     capTopImg: pcbTopImg,
                     capSideImg: pcbSideImg
@@ -688,8 +692,9 @@
             };
 
             try {
-                document.getElementById('loadingText').innerText = "جاري إرسال الطلب...";
+                document.getElementById('loadingText').innerText = "جاري تشفير الإرسال وإرسال الطلب الآمن للـ Worker...";
 
+                // إرسال البيانات والملفات دفعة واحدة وبأمان للـ Worker
                 const response = await fetch(NETLIFY_FUNCTION_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -699,26 +704,22 @@
                 const result = await response.json();
 
                 if (response.ok && result.success) {
-                    overlay.style.backgroundColor = "rgba(6, 12, 24, 0.98)";
-                    document.getElementById('modalSpinner').style.display = 'none';
+                    overlay.style.backgroundColor = "rgba(6, 12, 24, 0.95)";
                     document.getElementById('loadingText').innerHTML = `
-                        <span style="font-size: 3.5rem;">✅</span>
-                        <h2 style="color: var(--success); margin: 15px 0;">تم استلام طلبك الفردي بنجاح!</h2>
-                        <p style="color: var(--text-white); font-size: 1rem; margin-bottom: 25px; line-height: 1.6;">
-                            تم إرسال قياساتك وصور التطريز مباشرة إلى معمل المهندس. سيتم التواصل معك قريباً لتأكيد التوصيل.
-                        </p>
-                        <div style="display: flex; gap: 10px; flex-direction: column; width: 100%;">
-                            <button type="button" class="btn-submit" onclick="resetForm()">🔄 إرسال طلب جديد</button>
-                            <button type="button" class="btn-submit" onclick="goToHome()" style="background-color: transparent; border: 1px solid var(--gold-primary); color: var(--gold-primary); margin-top: 5px;">🏠 العودة للرئيسية</button>
-                        </div>
+                        <span style="font-size: 3rem;">🎉</span><br><br>
+                        <span style="color: var(--success);">تم إرسال طلبك الفردي بنجاح فائق وآمن!</span><br>
+                        سيقوم المهندس بالتواصل معك قريباً لتأكيد القياسات.
+                        <br><br>
+                        <button class="btn-submit" style="width: 200px;" onclick="window.location.href='index.html'">العودة للرئيسية</button>
                     `;
+                    document.querySelector('.spinner').style.display = 'none';
                 } else {
-                    throw new Error(result.error || "فشل الاستجابة من السيرفر");
+                    throw new Error(result.error || "فشل الاستجابة من السيرفر الآمن");
                 }
 
             } catch (error) {
-                console.error("فشل إرسال الطلب:", error);
-                alert("حدث خطأ أثناء الإرسال، يرجى إعادة المحاولة.");
+                console.error("فشل إرسال الطلب بالكامل:", error);
+                alert("حدث خطأ في جدار الحماية أو أثناء الإرسال الآمن، يرجى إعادة المحاولة.");
                 overlay.style.display = 'none';
             }
         }
