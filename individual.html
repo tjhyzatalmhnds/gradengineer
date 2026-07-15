@@ -516,9 +516,9 @@
     </div>
 
     <script>
-        // Netlify ستقوم بتوجيه الطلب تلقائياً لملف submit-order.js بأمان
-        const NETLIFY_FUNCTION_URL = '/.netlify/functions/submit-order';
-        // متغيرات الحفظ للمسارات التفاعلية
+        // الرابط النسبي المباشر لخدمة Cloudflare Functions
+        const CLOUDFLARE_FUNCTION_URL = '/submit-order';
+        
         let modelSelected = '';
         let fabricSelected = '';
         let sashSelected = ''; 
@@ -626,11 +626,10 @@
                 groupSashBack.style.display = 'none';
             }
 
-            // تطبيق التحكم الذكي بالإضافات حسب الموديل المختار
             checkAdditionsVisibility(modelSelected);
         }
 
-        // دالة مساعدة لتشفير وتحويل ملفات الصور المرفوعة إلى ترميز Base64 لترسل بأمان عبر الـ Worker
+        // دالة تحويل الصور إلى Base64
         function fileToBase64(fileInputId) {
             return new Promise((resolve) => {
                 const fileInput = document.getElementById(fileInputId);
@@ -662,12 +661,12 @@
             // معالجة الصور وتحويلها لـ Base64
             const sashFixedImg = await fileToBase64('sash-fixed-img');
             const sashBackImg = await fileToBase64('sash-back-img');
-            const pcbTopImg = await fileToBase64('cap-top-img'); // تم تغيير المسمى لتفادي تضارب المتغيرات
+            const pcbTopImg = await fileToBase64('cap-top-img');
             const pcbSideImg = await fileToBase64('cap-side-img');
 
-            // تجميع كائن البيانات الكامل لتمريره للـ Worker
+            // تجميع كائن البيانات الكامل ليتوافق تماماً مع السيرفر
             const orderData = {
-                actionType: "SINGLE_ORDER", // لتحديد نوع المعاملة في السيرفر بشكل صريح
+                actionType: "SINGLE_ORDER", 
                 studentName: document.getElementById('student-name').value,
                 sashText: document.getElementById('sash-text').value,
                 phone: document.getElementById('student-phone').value,
@@ -680,11 +679,12 @@
                 sashBackText: document.getElementById('sash-back-text').value || 'لم يكتب شيء',
                 capTopText: document.getElementById('cap-top-text').value || 'لم يكتب شيء',
                 capSideText: document.getElementById('cap-side-text').value || 'لم يكتب شيء',
-                batchModel: modelSelected, // تم توحيد المفاتيح لتتوافق مع كود السيرفر
+                batchModel: modelSelected, 
                 batchFabric: fabricSelected,
                 sashSelected: sashSelected,
-                additions: getSelectedAdditions(), // إرسال الإضافات الفخمة
+                additions: getSelectedAdditions(), 
                 images: {
+                    sashFixedImg, // تمت إضافة هذه الصورة الناقصة أيضاً لضمان وصولها
                     sashBackImg,
                     capTopImg: pcbTopImg,
                     capSideImg: pcbSideImg
@@ -692,16 +692,16 @@
             };
 
             try {
-                document.getElementById('loadingText').innerText = "جاري تشفير الإرسال وإرسال الطلب الآمن للـ Worker...";
+                document.getElementById('loadingText').innerText = "جاري تشفير الإرسال وإرسال الطلب الآمن...";
 
-                // إرسال البيانات والملفات دفعة واحدة وبأمان للـ Worker
-                const response = await fetch('/.netlify/functions/submit-order', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify(payload)
-});
+                // الإرسال مباشرة إلى رابط Cloudflare Pages النسبي الصحيح والمعدل
+                const response = await fetch(CLOUDFLARE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData) // تم تعديله ليرسل كائن البيانات الفعلي بدلاً من الـ payload غير المعرّف!
+                });
 
                 const result = await response.json();
 
