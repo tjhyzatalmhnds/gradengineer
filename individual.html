@@ -695,11 +695,13 @@
                 document.getElementById('loadingText').innerText = "جاري تشفير الإرسال وإرسال الطلب الآمن للـ Worker...";
 
                 // إرسال البيانات والملفات دفعة واحدة وبأمان للـ Worker
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
-                });
+                const response = await fetch('/.netlify/functions/submit-order', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(payload)
+});
 
                 const result = await response.json();
 
