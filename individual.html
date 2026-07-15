@@ -250,6 +250,8 @@
             color: var(--gold-primary);
             font-weight: 700;
             font-size: 1.2rem;
+            padding: 20px;
+            text-align: center;
         }
 
         .spinner {
@@ -301,8 +303,10 @@
 <body>
 
     <div class="loading-overlay" id="loadingOverlay">
-        <div class="spinner"></div>
-        <p id="loadingText">جاري معالجة وإرسال طلبك...</p>
+        <div class="spinner" id="modalSpinner"></div>
+        <div id="loadingText" style="width: 100%; max-width: 480px; text-align: center;">
+            جاري معالجة وإرسال طلبك...
+        </div>
     </div>
 
     <div class="main-wrapper">
@@ -513,6 +517,15 @@
         let fabricSelected = '';
         let sashSelected = ''; 
 
+        // دوال التحكم بالأزرار بعد انتهاء الطلب
+        function goToHome() {
+            window.location.href = 'index.html';
+        }
+
+        function resetForm() {
+            window.location.reload();
+        }
+
         function toggleLengthInput() {
             const checkbox = document.getElementById('add-extra-length');
             const container = document.getElementById('length-amount-container');
@@ -614,7 +627,101 @@
             checkAdditionsVisibility(modelSelected);
         }
 
+        // إكمال الدالة الناقصة لمعالجة الصور
         function fileToBase64(fileInputId) {
             return new Promise((resolve) => {
                 const fileInput = document.getElementById(fileInputId);
-                if (!fileInput || fileInput.files.length === 0
+                if (!fileInput || fileInput.files.length === 0) {
+                    resolve(null);
+                    return;
+                }
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onloadend = function() {
+                    resolve({
+                        base64: reader.result.split(',')[1],
+                        filename: file.name,
+                        mimeType: file.type
+                    });
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // دالة الإرسال الكاملة
+        async function handleOrderSubmit(event) {
+            event.preventDefault();
+
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.style.display = 'flex';
+            document.getElementById('loadingText').innerText = "جاري ترميز وضغط الصور المرفقة بأمان...";
+
+            const sashFixedImg = await fileToBase64('sash-fixed-img');
+            const sashBackImg = await fileToBase64('sash-back-img');
+            const pcbTopImg = await fileToBase64('cap-top-img');
+            const pcbSideImg = await fileToBase64('cap-side-img');
+
+            const orderData = {
+                actionType: "SINGLE_ORDER",
+                studentName: document.getElementById('student-name').value,
+                sashText: document.getElementById('sash-text').value,
+                phone: document.getElementById('student-phone').value,
+                lengthGown: document.getElementById('length-gown').value,
+                lengthSleeve: document.getElementById('length-sleeve').value,
+                shoulder: document.getElementById('measure-shoulder').value,
+                chest: document.getElementById('measure-chest').value,
+                head: document.getElementById('measure-head').value,
+                sashFixedText: document.getElementById('sash-fixed-text').value || 'لم يكتب شيء',
+                sashBackText: document.getElementById('sash-back-text').value || 'لم يكتب شيء',
+                capTopText: document.getElementById('cap-top-text').value || 'لم يكتب شيء',
+                capSideText: document.getElementById('cap-side-text').value || 'لم يكتب شيء',
+                batchModel: modelSelected,
+                batchFabric: fabricSelected,
+                sashSelected: sashSelected,
+                additions: getSelectedAdditions(),
+                images: {
+                    sashFixedImg,
+                    sashBackImg,
+                    capTopImg: pcbTopImg,
+                    capSideImg: pcbSideImg
+                }
+            };
+
+            try {
+                document.getElementById('loadingText').innerText = "جاري إرسال الطلب...";
+
+                const response = await fetch(NETLIFY_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orderData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    overlay.style.backgroundColor = "rgba(6, 12, 24, 0.98)";
+                    document.getElementById('modalSpinner').style.display = 'none';
+                    document.getElementById('loadingText').innerHTML = `
+                        <span style="font-size: 3.5rem;">✅</span>
+                        <h2 style="color: var(--success); margin: 15px 0;">تم استلام طلبك الفردي بنجاح!</h2>
+                        <p style="color: var(--text-white); font-size: 1rem; margin-bottom: 25px; line-height: 1.6;">
+                            تم إرسال قياساتك وصور التطريز مباشرة إلى معمل المهندس. سيتم التواصل معك قريباً لتأكيد التوصيل.
+                        </p>
+                        <div style="display: flex; gap: 10px; flex-direction: column; width: 100%;">
+                            <button type="button" class="btn-submit" onclick="resetForm()">🔄 إرسال طلب جديد</button>
+                            <button type="button" class="btn-submit" onclick="goToHome()" style="background-color: transparent; border: 1px solid var(--gold-primary); color: var(--gold-primary); margin-top: 5px;">🏠 العودة للرئيسية</button>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(result.error || "فشل الاستجابة من السيرفر");
+                }
+
+            } catch (error) {
+                console.error("فشل إرسال الطلب:", error);
+                alert("حدث خطأ أثناء الإرسال، يرجى إعادة المحاولة.");
+                overlay.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
