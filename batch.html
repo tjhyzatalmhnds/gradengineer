@@ -632,11 +632,13 @@
             };
 
             try {
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(batchPayload)
-                });
+                const response = await fetch('/.netlify/functions/submit-order', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify(payload)
+});
 
                 const result = await response.json();
 
