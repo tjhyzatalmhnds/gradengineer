@@ -516,8 +516,8 @@
     </div>
 
     <script>
-        // الرابط النسبي المباشر لخدمة Cloudflare Functions
-        const CLOUDFLARE_FUNCTION_URL = '/submit-order';
+        // ✅ التعديل الرئيسي والمثالي للتوجيه داخل كلاود فلير بنجاح وتجاوز جدار الحماية
+        const CLOUDFLARE_FUNCTION_URL = '/functions/submit-order';
         
         let modelSelected = '';
         let fabricSelected = '';
@@ -684,7 +684,7 @@
                 sashSelected: sashSelected,
                 additions: getSelectedAdditions(), 
                 images: {
-                    sashFixedImg, // تمت إضافة هذه الصورة الناقصة أيضاً لضمان وصولها
+                    sashFixedImg, 
                     sashBackImg,
                     capTopImg: pcbTopImg,
                     capSideImg: pcbSideImg
@@ -694,13 +694,12 @@
             try {
                 document.getElementById('loadingText').innerText = "جاري تشفير الإرسال وإرسال الطلب الآمن...";
 
-                // الإرسال مباشرة إلى رابط Cloudflare Pages النسبي الصحيح والمعدل
                 const response = await fetch(CLOUDFLARE_FUNCTION_URL, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(orderData) // تم تعديله ليرسل كائن البيانات الفعلي بدلاً من الـ payload غير المعرّف!
+                    body: JSON.stringify(orderData)
                 });
 
                 const result = await response.json();
