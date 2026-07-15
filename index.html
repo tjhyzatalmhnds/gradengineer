@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تجهيزات المهندس</title>
+    <!-- استيراد خط Tajawal الفخم -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* درجات النيلي الغامق الملكي والذهبي الخاص بالشعار */
+            --bg-color: #060c18; 
+            --bg-gradient-accent: #0f1b30; 
+            --card-bg: #0d1726; 
+            --card-border: #1a2a40; 
+            --gold-primary: #d4af37; 
+            --gold-hover: #ffca28; 
+            --text-main: #d4af37; 
+            --text-white: #ffffff; 
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Tajawal', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 20px;
+            background: radial-gradient(circle at center, var(--bg-gradient-accent) 0%, var(--bg-color) 85%);
+            overflow-x: hidden;
+        }
+
+        /* حاوية المحتوى الرئيسي المتمركزة في المنتصف */
+        .main-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            max-width: 600px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        /* 1. شعار الموقع (طبيعي وبدون إطار) */
+        .logo-wrapper {
+            margin-bottom: 25px;
+        }
+
+        .logo-img {
+            width: 180px; 
+            height: auto;
+            border-radius: 50%;
+            border: none; 
+            box-shadow: none; 
+            transition: transform 0.4s ease;
+        }
+
+        .logo-img:hover {
+            transform: scale(1.03);
+        }
+
+        /* 2. اسم الموقع */
+        .site-name {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            letter-spacing: -0.5px;
+            color: var(--text-main);
+        }
+
+        .site-name span {
+            color: var(--text-white); 
+        }
+
+        /* 3. العبارة المخصصة باللون الذهبي */
+        .site-tagline {
+            font-size: 1.25rem;
+            color: var(--text-main); 
+            line-height: 1.7;
+            margin-bottom: 45px;
+            font-weight: 500;
+            max-width: 500px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* 4. حاوية الأزرار المحدثة للتنقل لصفحات منفصلة */
+        .buttons-group {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 380px;
+            margin-bottom: 50px;
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            text-decoration: none;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-align: center;
+        }
+
+        /* زر طلب فردي */
+        .btn-primary {
+            background-color: var(--gold-primary);
+            color: var(--bg-color); 
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.15);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--gold-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(212, 175, 55, 0.3);
+        }
+
+        /* زر طلب دفعة */
+        .btn-secondary {
+            background-color: transparent;
+            color: var(--gold-primary);
+            border: 2px solid var(--gold-primary);
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(212, 175, 55, 0.08);
+            transform: translateY(-2px);
+            border-color: var(--gold-hover);
+            color: var(--gold-hover);
+        }
+
+        /* 5. طرق التواصل (انستا وواتساب) */
+        .contact-section {
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            border-top: 1px solid var(--card-border);
+            padding-top: 30px;
+        }
+
+        .contact-title {
+            font-size: 0.9rem;
+            color: var(--gold-primary); 
+            margin-bottom: 15px;
+            opacity: 0.8;
+        }
+
+        .contact-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gold-primary); 
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            background-color: var(--card-bg);
+            border: 1px solid var(--card-border);
+            padding: 10px 18px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .contact-item:hover {
+            border-color: var(--gold-hover);
+            color: var(--gold-hover);
+            transform: translateY(-2px);
+            background-color: rgba(13, 23, 38, 0.8);
+        }
+
+        /* الهواتف المحمولة */
+        @media (max-width: 480px) {
+            .logo-img {
+                width: 150px;
+            }
+            .site-name {
+                font-size: 2.1rem;
+            }
+            .site-tagline {
+                font-size: 1.1rem;
+            }
+            .btn {
+                padding: 14px;
+                font-size: 1rem;
+            }
+            .contact-links {
+                flex-direction: column;
+                align-items: center;
+                gap: 10px;
+            }
+            .contact-item {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-container">
+        <!-- 1. الشعار (بدون إطار أو توهج) -->
+        <div class="logo-wrapper">
+            <img src="82251.png" alt="شعار تجهيزات المهندس" class="logo-img">
+        </div>
+
+        <!-- 2. اسم الموقع بالكامل بالذهبي -->
+        <h1 class="site-name">تجهيزات <span>المهندس</span></h1>
+
+        <!-- 3. العبارة المخصصة باللون الذهبي -->
+        <p class="site-tagline">نحو منصة التخرج بثقة وأناقة... وتجهيزات تليق بإنجازك</p>
+
+        <!-- 4. أزرار الاختيارات (المرتبطة بالصفحات الجديدة) -->
+        <div class="buttons-group">
+            <a href="individual.html" class="btn btn-primary">📋 طلب فردي</a>
+            <a href="batch.html" class="btn btn-secondary">🎓 طلب دفعة</a>
+        </div>
+
+        <!-- 5. طرق التواصل (انستا وواتساب) -->
+        <div class="contact-section">
+            <p class="contact-title">تواصل معنا مباشرة عبر</p>
+            <div class="contact-links">
+                <a href="https://instagram.com/gradengineer1" target="_blank" class="contact-item">
+                    <span>📸</span> انستغرام
+                </a>
+                <a href="https://wa.me/9647729629542" target="_blank" class="contact-item">
+                    <span>💬</span> واتساب
+                </a>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
