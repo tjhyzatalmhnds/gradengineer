@@ -510,8 +510,8 @@
     </div>
 
     <script>
-        // رابط الإرسال المباشر لخدمة Cloudflare Pages
-        const CLOUDFLARE_FUNCTION_URL = '/submit-order';
+        // ✅ التعديل الرئيسي والنهائي للمسار ليتوافق مع وظائف Cloudflare Pages
+        const CLOUDFLARE_FUNCTION_URL = '/functions/submit-order';
         let validatedBatchData = null; 
         let uniLogoBase64 = null;
 
@@ -633,7 +633,6 @@
             };
 
             try {
-                // تعديل رابط الإرسال إلى المسار الجديد لـ Cloudflare Pages وتمرير الكائن الصحيح batchPayload
                 const response = await fetch(CLOUDFLARE_FUNCTION_URL, {
                     method: 'POST',
                     headers: {
@@ -678,7 +677,6 @@
             document.getElementById('loadingText').innerText = "جاري الاستعلام عن بيانات الدفعة والتحقق من الكود...";
 
             try {
-                // إرسال طلب التحقق من الكود إلى السيرفر المباشر
                 const response = await fetch(CLOUDFLARE_FUNCTION_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
