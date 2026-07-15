@@ -72,7 +72,6 @@
             transition: all 0.3s ease;
         }
 
-        /* حاويات الخطوات التفاعلية */
         .step-container {
             display: flex;
             flex-direction: column;
@@ -80,7 +79,6 @@
             margin-top: 20px;
         }
 
-        /* كروت الاختيار */
         .selection-card {
             background-color: var(--card-bg);
             border: 2px solid var(--card-border);
@@ -116,7 +114,6 @@
             opacity: 0.8;
         }
 
-        /* حاوية الاستمارة النهائية */
         .form-container {
             display: none;
             background-color: var(--card-bg);
@@ -126,7 +123,6 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* بار عرض الخيارات النشطة */
         .summary-banner {
             background-color: var(--input-bg);
             border: 1px dashed var(--gold-primary);
@@ -192,7 +188,6 @@
             box-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
         }
 
-        /* تصميم مخصص لرفع الصور */
         .file-upload-wrapper {
             position: relative;
             margin-top: 5px;
@@ -243,7 +238,6 @@
             color: var(--gold-primary);
         }
 
-        /* تأثيرات التحميل عند الإرسال */
         .loading-overlay {
             display: none;
             position: fixed;
@@ -268,7 +262,6 @@
             margin-bottom: 15px;
         }
 
-        /* تنسيقات صندوق الإضافات الذكي */
         .additions-box {
             background-color: #11223b;
             border: 1px solid var(--card-border);
@@ -309,7 +302,7 @@
 
     <div class="loading-overlay" id="loadingOverlay">
         <div class="spinner"></div>
-        <p id="loadingText">جاري تشفير ومعالجة طلبك الفخم...</p>
+        <p id="loadingText">جاري معالجة وإرسال طلبك...</p>
     </div>
 
     <div class="main-wrapper">
@@ -380,8 +373,7 @@
         </div>
 
         <div class="form-container" id="form-step">
-            <div class="summary-banner" id="summary-banner">
-                </div>
+            <div class="summary-banner" id="summary-banner"></div>
 
             <form id="individualOrderForm" onsubmit="handleOrderSubmit(event)">
                 <div class="section-title">بيانات الطالب الأساسية</div>
@@ -516,14 +508,11 @@
     </div>
 
     <script>
-        // Netlify ستقوم بتوجيه الطلب تلقائياً لملف submit-order.js بأمان
         const NETLIFY_FUNCTION_URL = '/.netlify/functions/submit-order';
-        // متغيرات الحفظ للمسارات التفاعلية
         let modelSelected = '';
         let fabricSelected = '';
         let sashSelected = ''; 
 
-        // وظائف إدارة خيارات الإضافات
         function toggleLengthInput() {
             const checkbox = document.getElementById('add-extra-length');
             const container = document.getElementById('length-amount-container');
@@ -566,7 +555,6 @@
             return selected.length > 0 ? selected.join(' - ') : "لا توجد إضافات";
         }
 
-        // الانتقال لاختيار القماش
         function nextToFabric(modelName, icon) {
             modelSelected = modelName;
             document.getElementById('model-step').style.display = 'none';
@@ -576,7 +564,6 @@
             document.getElementById('page-subtitle').innerText = `الموديل الحالي: ${modelName} ${icon} - يرجى تحديد الخامة`;
         }
 
-        // الانتقال للوشاح (إذا أمريكي) أو مباشرة للاستمارة
         function nextToSashOrForm(fabricName) {
             fabricSelected = fabricName;
             document.getElementById('fabric-step').style.display = 'none';
@@ -591,14 +578,12 @@
             }
         }
 
-        // إنهاء اختيار الوشاح (خاص بالأمريكي) والانتقال للاستمارة
         function finishSelection(sashType, icon) {
             sashSelected = sashType;
             document.getElementById('sash-step').style.display = 'none';
             showForm();
         }
 
-        // إظهار الاستمارة وضبط حقولها ديناميكياً
         function showForm() {
             document.getElementById('form-step').style.display = 'block';
             document.getElementById('page-title').innerText = "تفاصيل وقياسات الطلب الفردي";
@@ -626,103 +611,10 @@
                 groupSashBack.style.display = 'none';
             }
 
-            // تطبيق التحكم الذكي بالإضافات حسب الموديل المختار
             checkAdditionsVisibility(modelSelected);
         }
 
-        // دالة مساعدة لتشفير وتحويل ملفات الصور المرفوعة إلى ترميز Base64 لترسل بأمان عبر الـ Worker
         function fileToBase64(fileInputId) {
             return new Promise((resolve) => {
                 const fileInput = document.getElementById(fileInputId);
-                if (!fileInput || fileInput.files.length === 0) {
-                    resolve(null);
-                    return;
-                }
-                const file = fileInput.files[0];
-                const reader = new FileReader();
-                reader.onloadend = function() {
-                    resolve({
-                        base64: reader.result.split(',')[1],
-                        filename: file.name,
-                        mimeType: file.type
-                    });
-                };
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // معالجة وإرسال الطلب بالكامل
-        async function handleOrderSubmit(event) {
-            event.preventDefault();
-
-            const overlay = document.getElementById('loadingOverlay');
-            overlay.style.display = 'flex';
-            document.getElementById('loadingText').innerText = "جاري ترميز وضغط الصور المرفقة بأمان...";
-
-            // معالجة الصور وتحويلها لـ Base64
-            const sashFixedImg = await fileToBase64('sash-fixed-img');
-            const sashBackImg = await fileToBase64('sash-back-img');
-            const pcbTopImg = await fileToBase64('cap-top-img'); // تم تغيير المسمى لتفادي تضارب المتغيرات
-            const pcbSideImg = await fileToBase64('cap-side-img');
-
-            // تجميع كائن البيانات الكامل لتمريره للـ Worker
-            const orderData = {
-                actionType: "SINGLE_ORDER", // لتحديد نوع المعاملة في السيرفر بشكل صريح
-                studentName: document.getElementById('student-name').value,
-                sashText: document.getElementById('sash-text').value,
-                phone: document.getElementById('student-phone').value,
-                lengthGown: document.getElementById('length-gown').value,
-                lengthSleeve: document.getElementById('length-sleeve').value,
-                shoulder: document.getElementById('measure-shoulder').value,
-                chest: document.getElementById('measure-chest').value,
-                head: document.getElementById('measure-head').value,
-                sashFixedText: document.getElementById('sash-fixed-text').value || 'لم يكتب شيء',
-                sashBackText: document.getElementById('sash-back-text').value || 'لم يكتب شيء',
-                capTopText: document.getElementById('cap-top-text').value || 'لم يكتب شيء',
-                capSideText: document.getElementById('cap-side-text').value || 'لم يكتب شيء',
-                batchModel: modelSelected, // تم توحيد المفاتيح لتتوافق مع كود السيرفر
-                batchFabric: fabricSelected,
-                sashSelected: sashSelected,
-                additions: getSelectedAdditions(), // إرسال الإضافات الفخمة
-                images: {
-                    sashBackImg,
-                    capTopImg: pcbTopImg,
-                    capSideImg: pcbSideImg
-                }
-            };
-
-            try {
-                document.getElementById('loadingText').innerText = "جاري تشفير الإرسال وإرسال الطلب الآمن للـ Worker...";
-
-                // إرسال البيانات والملفات دفعة واحدة وبأمان للـ Worker
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData)
-                });
-
-                const result = await response.json();
-
-                if (response.ok && result.success) {
-                    overlay.style.backgroundColor = "rgba(6, 12, 24, 0.95)";
-                    document.getElementById('loadingText').innerHTML = `
-                        <span style="font-size: 3rem;">🎉</span><br><br>
-                        <span style="color: var(--success);">تم إرسال طلبك الفردي بنجاح فائق وآمن!</span><br>
-                        سيقوم المهندس بالتواصل معك قريباً لتأكيد القياسات.
-                        <br><br>
-                        <button class="btn-submit" style="width: 200px;" onclick="window.location.href='index.html'">العودة للرئيسية</button>
-                    `;
-                    document.querySelector('.spinner').style.display = 'none';
-                } else {
-                    throw new Error(result.error || "فشل الاستجابة من السيرفر الآمن");
-                }
-
-            } catch (error) {
-                console.error("فشل إرسال الطلب بالكامل:", error);
-                alert("حدث خطأ في جدار الحماية أو أثناء الإرسال الآمن، يرجى إعادة المحاولة.");
-                overlay.style.display = 'none';
-            }
-        }
-    </script>
-</body>
-</html>
+                if (!fileInput || fileInput.files.length === 0
