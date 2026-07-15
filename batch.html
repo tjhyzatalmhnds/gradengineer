@@ -434,7 +434,7 @@
                         <input type="text" id="sash-text" class="form-control" placeholder="مثال: المهندس علي" required>
                     </div>
 
-                    <div class="section-title">تفاصيل وصور التطريز المخصصة (ملكي فخم)</div>
+                    <div class="section-title">تفاصيل وصور التطريز المخصصة</div>
 
                     <div class="form-group">
                         <label for="sash-back-text">الكتابة على ظهر الوشاح</label>
@@ -510,7 +510,8 @@
     </div>
 
     <script>
-        const NETLIFY_FUNCTION_URL = '/.netlify/functions/submit-order';
+        // رابط الإرسال المباشر لخدمة Cloudflare Pages
+        const CLOUDFLARE_FUNCTION_URL = '/submit-order';
         let validatedBatchData = null; 
         let uniLogoBase64 = null;
 
@@ -632,13 +633,14 @@
             };
 
             try {
-                const response = await fetch('/.netlify/functions/submit-order', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify(payload)
-});
+                // تعديل رابط الإرسال إلى المسار الجديد لـ Cloudflare Pages وتمرير الكائن الصحيح batchPayload
+                const response = await fetch(CLOUDFLARE_FUNCTION_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(batchPayload)
+                });
 
                 const result = await response.json();
 
@@ -676,7 +678,8 @@
             document.getElementById('loadingText').innerText = "جاري الاستعلام عن بيانات الدفعة والتحقق من الكود...";
 
             try {
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
+                // إرسال طلب التحقق من الكود إلى السيرفر المباشر
+                const response = await fetch(CLOUDFLARE_FUNCTION_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ actionType: "VERIFY_BATCH", batchCode: searchCode })
@@ -705,7 +708,6 @@
                     `;
                     measurementSection.insertBefore(infoDiv, measurementSection.firstChild);
 
-                    // تفعيل الفلترة على الإضافات مباشرة اعتماداً على موديل الدفعة
                     checkAdditionsVisibility(validatedBatchData.batchModel);
 
                     document.getElementById('page-subtitle').innerText = "تأكد من مطابقة التفاصيل أعلاه ثم املأ استمارة تطريزك الملكي";
@@ -741,7 +743,7 @@
                 sashBackText: document.getElementById('sash-back-text').value || 'لم يكتب شيء',
                 capTopText: document.getElementById('cap-top-text').value || 'لم يكتب شيء',
                 capSideText: document.getElementById('cap-side-text').value || 'لم يكتب شيء',
-                additions: getSelectedAdditions(), // جمع الإضافات الفخمة
+                additions: getSelectedAdditions(), 
                 images: {
                     sashBackImg,
                     capTopImg,
@@ -751,7 +753,7 @@
 
             try {
                 document.getElementById('loadingText').innerText = "جاري رفع بياناتك الآمنة لجدول الدفعة...";
-                const response = await fetch(NETLIFY_FUNCTION_URL, {
+                const response = await fetch(CLOUDFLARE_FUNCTION_URL, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(studentPayload)
