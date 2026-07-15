@@ -37,6 +37,11 @@ export async function onRequest(context) {
     const TELEGRAM_BATCH_CHAT_ID = env.TELEGRAM_BATCH_CHAT_ID; 
     const GOOGLE_SCRIPT_URL = env.GOOGLE_SCRIPT_URL;
 
+    // التحقق من وجود التوكنات الأساسية لمنع السيرفر من الانهيار وإظهار خطأ واضح
+    if (!TELEGRAM_BOT_TOKEN) {
+      throw new Error("TELEGRAM_BOT_TOKEN غير معرف في متغيرات البيئة بكلاود فلير");
+    }
+
     // =========================================================
     // 🛠️ دوال المساعدة الخاصة بالاتصال بـ API التليجرام
     // =========================================================
@@ -55,7 +60,6 @@ export async function onRequest(context) {
         });
         const result = await response.json();
         if (result.ok) {
-          // إرجاع الـ thread_id الخاص بالتوبيك الجديد المفتوح
           return result.result.message_thread_id; 
         } else {
           console.error("فشل إنشاء التوبيك في تليجرام:", result.description);
@@ -69,14 +73,11 @@ export async function onRequest(context) {
 
     // دالة إرسال الرسالة النصية للتليجرام (تدعم الـ Thread ID للتوجيه داخل التوبيك)
     const sendTelegramMessage = async (text, chatId, threadId = null) => {
-      if (!TELEGRAM_BOT_TOKEN || !chatId) {
-        console.warn("بيانات تليجرام غير مكتملة (البوت توكن أو الشات آيدي ناقص)");
-        return;
-      }
+      if (!TELEGRAM_BOT_TOKEN || !chatId) return;
       try {
         const payload = { chat_id: chatId, text: text, parse_mode: "Markdown" };
         if (threadId) {
-          payload.message_thread_id = threadId; // توجيه الرسالة للتوبيك المخصص
+          payload.message_thread_id = threadId;
         }
 
         await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -93,7 +94,6 @@ export async function onRequest(context) {
     const sendPhoto = async (imgObj, caption, chatId, threadId = null) => {
       if (!imgObj || !imgObj.base64 || !TELEGRAM_BOT_TOKEN || !chatId) return;
       try {
-        // تحويل Base64 إلى مصفوفة بايت ثنائية متوافقة مع محرك V8 الخاص بكلاود فلير
         const binaryString = atob(imgObj.base64);
         const len = binaryString.length;
         const bytes = new Uint8Array(len);
@@ -105,7 +105,7 @@ export async function onRequest(context) {
         formData.append("chat_id", chatId);
         formData.append("caption", caption);
         if (threadId) {
-          formData.append("message_thread_id", threadId); // توجيه الصورة داخل التوبيك المحدد
+          formData.append("message_thread_id", threadId);
         }
         
         const blob = new Blob([bytes], { type: imgObj.mimeType || 'image/png' });
@@ -124,12 +124,9 @@ export async function onRequest(context) {
     // 🟡 معالجة إنشاء دفعة جديدة (CREATE_BATCH)
     // ==========================================
     if (data.actionType === "CREATE_BATCH") {
-      
-      // 1. إنشاء توبيك (Topic) مخصص باسم هذه الدفعة الجديدة داخل تليجرام تلقائياً
       const topicName = `دفعة: ${data.batchCode} - ${data.uniName}`;
       const createdThreadId = await createTelegramTopic(topicName, TELEGRAM_BATCH_CHAT_ID);
 
-      // 2. تخزين معلومات الدفعة والـ Thread ID المرتبط بها محلياً لربط الطلاب المنضمين لاحقاً
       activeBatches[data.batchCode] = {
         batchCode: data.batchCode,
         uniName: data.uniName,
@@ -137,7 +134,7 @@ export async function onRequest(context) {
         deptName: data.deptName,
         batchModel: data.batchModel,
         batchFabric: data.batchFabric,
-        threadId: createdThreadId // ربط كود الدفعة بـ Topic ID التليجرام
+        threadId: createdThreadId 
       };
 
       const createMsg = `👑 **تأسيس دفعة جديدة - تجهيزات المهندس**\n\n` +
@@ -146,9 +143,8 @@ export async function onRequest(context) {
         `🏫 **الجامعة:** ${data.uniName} - ${data.collName}\n` +
         `📂 **القسم والدراسة:** ${data.deptName}\n` +
         `👥 **العدد المتوقع:** ${data.studentCount} طالب\n` +
-        `🎓 **الموديل الموحد:** ${data.batchModel} | 🧵 **القماش:** ${data.batchFabric}`;
+        `GRAD🎓 **الموديل الموحد:** ${data.batchModel} | 🧵 **القماش:** ${data.batchFabric}`;
 
-      // 3. إرسال بيانات التأسيس والصورة داخل التوبيك المنشأ حديثاً
       await sendTelegramMessage(createMsg, TELEGRAM_BATCH_CHAT_ID, createdThreadId);
       
       if (data.uniLogo && data.uniLogo.base64) {
@@ -178,7 +174,6 @@ export async function onRequest(context) {
     // 🟡 معالجة انضمام طالب لدفعة (JOIN_BATCH)
     // ==========================================
     else if (data.actionType === "JOIN_BATCH") {
-      // محاولة سحب الـ Thread ID الخاص بالدفعة لتوجيه طلب الطالب داخله
       const localBatch = activeBatches[data.batchCode];
       const targetThreadId = localBatch ? localBatch.threadId : null;
 
@@ -191,7 +186,6 @@ export async function onRequest(context) {
         `📐 **القياسات:** طول: ${data.lengthGown || '-'} | ردن: ${data.lengthSleeve || '-'} | كتف: ${data.shoulder || '-'} | صدر: ${data.chest || '-'} | رأس: ${data.head || '-'}\n` +
         `➕ **الإضافات:** ${data.additions || 'لا يوجد'}`;
 
-      // إرسال تفاصيل الطالب وصور قياساته وتصميمه داخل التوبيك المخصص لهذه الدفعة
       await sendTelegramMessage(joinMsg, TELEGRAM_BATCH_CHAT_ID, targetThreadId);
 
       if (data.images) {
@@ -216,7 +210,6 @@ export async function onRequest(context) {
         `📐 **القياسات:** طول: ${data.lengthGown || '-'} | ردن: ${data.lengthSleeve || '-'} | كتف: ${data.shoulder || '-'} | صدر: ${data.chest || '-'} | رأس: ${data.head || '-'}\n` +
         `➕ **الإضافات:** ${data.additions || 'لا يوجد'}`;
 
-      // الطلبات الفردية ترسل إلى الشات الأساسي (دون الحاجة لتوبيك)
       await sendTelegramMessage(singleMsg, TELEGRAM_CHAT_ID);
 
       if (data.images) {
@@ -245,7 +238,16 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ success: true }), { status: 200, headers });
 
   } catch (error) {
-    console.error("خطأ معالجة الطلب:", error);
-    return new Response(JSON.stringify({ success: false, error: error.message }), { status: 500, headers });
+    console.error("خطأ معالجة الطلب الداخلي:", error);
+    // تكرار رؤوس CORS هنا صراحة لمنع حظر جدار حماية المتصفح أثناء حدوث أي خطأ برمجي داخلي
+    return new Response(JSON.stringify({ success: false, error: error.message }), { 
+      status: 500, 
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Content-Type": "application/json"
+      } 
+    });
   }
 }
